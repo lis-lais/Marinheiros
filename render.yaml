@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: api-gateway
+    env: docker
+    dockerfilePath: services/api-gateway/Dockerfile
+    plan: free
+    branch: main
+    region: oregon
+    envVars:
+      - key: PORT
+        value: "3000"
+    instanceCount: 1
+    autoDeploy: true
+
+  - type: web
+    name: sailor-service
+    env: docker
+    dockerfilePath: services/sailor-service/Dockerfile
+    plan: free
+    branch: main
+    region: oregon
+    envVars:
+      - key: PORT
+        value: "3001"
+    instanceCount: 1
+    autoDeploy: true
+
+  - type: web
+    name: schedule-service
+    env: docker
+    dockerfilePath: services/schedule-service/Dockerfile
+    plan: free
+    branch: main
+    region: oregon
+    envVars:
+      - key: PORT
+        value: "3002"
+    instanceCount: 1
+    autoDeploy: true

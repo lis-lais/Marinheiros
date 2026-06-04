@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:6.0
+        ports: [ "27017:27017" ]
+        options: >-
+          --health-cmd='mongosh --eval "db.adminCommand({ping:1})" || exit 1' \
+          --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Start services (background)
+        run: |
+          mkdir -p ci-logs
+          export MONGODB_URI="mongodb://localhost:27017/marinheiros"
+          nohup bash -lc "MONGODB_URI=\"$MONGODB_URI\" npm --workspace @marinheiros/sailor-service run start:dev" > ci-logs/sailor.log 2>&1 &
+          nohup bash -lc "MONGODB_URI=\"$MONGODB_URI\" npm --workspace @marinheiros/schedule-service run start:dev" > ci-logs/schedule.log 2>&1 &
+          nohup bash -lc "MONGODB_URI=\"$MONGODB_URI\" npm --workspace @marinheiros/api-gateway run start:dev" > ci-logs/gateway.log 2>&1 &
+          sleep 6
+
+      - name: Wait for gateway health
+        run: |
+          for i in {1..30}; do
+            if curl -sSf http://localhost:3000/health; then
+              echo "Gateway healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Gateway failed to become healthy"
+          tail -n +1 ci-logs/*.log || true
+          exit 1
+
+      - name: Run integration tests
+        run: |
+          chmod +x test/integration.sh
+          ./test/integration.sh
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: ci-logs

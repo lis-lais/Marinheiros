@@ -1,0 +1,30 @@
+version: '3.9'
+services:
+  sailor-service:
+    build:
+      context: ./services/sailor-service
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3001'
+  schedule-service:
+    build:
+      context: ./services/schedule-service
+      dockerfile: Dockerfile
+    ports:
+      - '3002:3002'
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+  mongo:
+    image: mongo:6.0
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
