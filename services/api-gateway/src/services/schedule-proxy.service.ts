@@ -1,13 +1,14 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import axios, { AxiosInstance } from 'axios';
+import { AxiosInstance } from 'axios';
+import { createHttpClient } from '../infrastructure/http/http-client';
 
 @Injectable()
 export class ScheduleProxyService {
-  private readonly baseUrl = 'http://localhost:3002/schedules';
+  private readonly baseUrl = process.env.SCHEDULE_SERVICE_URL || 'http://localhost:3002/schedules';
   private readonly client: AxiosInstance;
 
   constructor() {
-    this.client = axios.create({ baseURL: this.baseUrl, timeout: 3000 });
+    this.client = createHttpClient(this.baseUrl);
   }
 
   async createSchedule(payload: Record<string, unknown>) {

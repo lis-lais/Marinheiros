@@ -1,3 +1,53 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: marinheiros-mongo
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_DATABASE: marinheiros
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: marinheiros-rabbit
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+
+  sailor-service:
+    build: ./services/sailor-service
+    container_name: sailor-service
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/marinheiros
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  schedule-service:
+    build: ./services/schedule-service
+    container_name: schedule-service
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/marinheiros
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: api-gateway
+    environment:
+      - SAILOR_SERVICE_URL=http://sailor-service:3001/sailors
+      - SCHEDULE_SERVICE_URL=http://schedule-service:3002/schedules
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    ports:
+      - '3000:3000'
+    depends_on:
+      - sailor-service
+      - schedule-service
+      - rabbitmq
 version: '3.9'
 services:
   sailor-service:

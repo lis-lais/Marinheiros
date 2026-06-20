@@ -6,6 +6,7 @@ import { InMemorySailorRepository } from './infrastructure/repositories/in-memor
 import { MongooseSailorRepository } from './infrastructure/repositories/mongoose-sailor.repository';
 import { SailorSchema } from './infrastructure/schemas/sailor.schema';
 import { REPOSITORIES } from './infrastructure/constants/providers.constants';
+import { RabbitMQService } from './infrastructure/messaging/rabbitmq.service';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { REPOSITORIES } from './infrastructure/constants/providers.constants';
   controllers: [SailorController],
   providers: [
     SailorService,
+    RabbitMQService,
     {
       provide: REPOSITORIES.Sailor,
       useClass: MongooseSailorRepository
