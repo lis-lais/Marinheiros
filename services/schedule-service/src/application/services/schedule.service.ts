@@ -3,13 +3,11 @@ import { randomUUID } from 'crypto';
 import { Embarkation } from '../../domain/entities/embarkation.entity';
 import { EmbarkationRepository } from '../../domain/repositories/embarkation.repository';
 import { DateRange } from '../../domain/value-objects/date-range.vo';
+import { REPOSITORIES } from '../../infrastructure/constants/providers.constants';
 
 @Injectable()
 export class ScheduleService {
-  constructor(
-    @Inject('EmbarkationRepository')
-    private readonly repository: EmbarkationRepository
-  ) {}
+  constructor(@Inject(REPOSITORIES.Embarkation) private readonly repository: EmbarkationRepository) {}
 
   async scheduleEmbarkation(
     sailorId: string,

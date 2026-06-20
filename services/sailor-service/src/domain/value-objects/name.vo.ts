@@ -1,7 +1,9 @@
+import { DomainError } from '../errors/domain.error';
+
 export class Name {
   constructor(public readonly firstName: string, public readonly lastName: string) {
     if (!firstName || !lastName) {
-      throw new Error('O nome do marinheiro deve conter nome e sobrenome.');
+      throw new DomainError('O nome do marinheiro deve conter nome e sobrenome.');
     }
   }
 

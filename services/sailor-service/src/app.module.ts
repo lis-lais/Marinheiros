@@ -5,6 +5,7 @@ import { SailorService } from './application/services/sailor.service';
 import { InMemorySailorRepository } from './infrastructure/repositories/in-memory-sailor.repository';
 import { MongooseSailorRepository } from './infrastructure/repositories/mongoose-sailor.repository';
 import { SailorSchema } from './infrastructure/schemas/sailor.schema';
+import { REPOSITORIES } from './infrastructure/constants/providers.constants';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { SailorSchema } from './infrastructure/schemas/sailor.schema';
   providers: [
     SailorService,
     {
-      provide: 'SailorRepository',
+      provide: REPOSITORIES.Sailor,
       useClass: MongooseSailorRepository
     },
     // keep in-memory for tests or fallback

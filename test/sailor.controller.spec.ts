@@ -33,11 +33,9 @@ describe('SailorController', () => {
     expect(sailorService.registerSailor).toHaveBeenCalledWith('João', 'Silva', 'Cabo');
   });
 
-  it('should return message when sailor not found', async () => {
+  it('should throw NotFoundException when sailor not found', async () => {
     sailorService.getSailorById.mockResolvedValue(null);
-    const result = await controller.getById('1');
-
-    expect(result).toEqual({ message: 'Marinheiro não encontrado.' });
+    await expect(controller.getById('1')).rejects.toThrow('Marinheiro não encontrado.');
   });
 
   it('should list sailors', async () => {
