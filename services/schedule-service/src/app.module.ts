@@ -5,6 +5,7 @@ import { ScheduleService } from './application/services/schedule.service';
 import { InMemoryEmbarkationRepository } from './infrastructure/repositories/in-memory-embarkation.repository';
 import { MongooseEmbarkationRepository } from './infrastructure/repositories/mongoose-embarkation.repository';
 import { EmbarkationSchema } from './infrastructure/schemas/embarkation.schema';
+import { REPOSITORIES } from './infrastructure/constants/providers.constants';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { EmbarkationSchema } from './infrastructure/schemas/embarkation.schema';
   providers: [
     ScheduleService,
     {
-      provide: 'EmbarkationRepository',
+      provide: REPOSITORIES.Embarkation,
       useClass: MongooseEmbarkationRepository
     },
     InMemoryEmbarkationRepository

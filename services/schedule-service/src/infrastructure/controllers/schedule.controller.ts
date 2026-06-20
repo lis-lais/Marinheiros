@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CreateEmbarkationDto } from '../../application/dto/create-embarkation.dto';
 import { ScheduleService } from '../../application/services/schedule.service';
+import { presentEmbarkation } from '../presenters/embarkation.presenter';
 
 @Controller('schedules')
 export class ScheduleController {
@@ -14,39 +15,18 @@ export class ScheduleController {
       body.embarkDate,
       body.disembarkDate
     );
-    return {
-      id: embarkation.id,
-      sailorId: embarkation.sailorId,
-      vesselName: embarkation.vesselName,
-      embarkDate: embarkation.period.startDate,
-      disembarkDate: embarkation.period.endDate,
-      createdAt: embarkation.createdAt
-    };
+    return presentEmbarkation(embarkation);
   }
 
   @Get('sailor/:sailorId')
   async getBySailor(@Param('sailorId') sailorId: string) {
     const records = await this.scheduleService.getEmbarkationsForSailor(sailorId);
-    return records.map((entry) => ({
-      id: entry.id,
-      sailorId: entry.sailorId,
-      vesselName: entry.vesselName,
-      embarkDate: entry.period.startDate,
-      disembarkDate: entry.period.endDate,
-      createdAt: entry.createdAt
-    }));
+    return records.map((entry) => ({ ...presentEmbarkation(entry) }));
   }
 
   @Get()
   async list() {
     const records = await this.scheduleService.listAllEmbarkations();
-    return records.map((entry) => ({
-      id: entry.id,
-      sailorId: entry.sailorId,
-      vesselName: entry.vesselName,
-      embarkDate: entry.period.startDate,
-      disembarkDate: entry.period.endDate,
-      createdAt: entry.createdAt
-    }));
+    return records.map((entry) => ({ ...presentEmbarkation(entry) }));
   }
 }

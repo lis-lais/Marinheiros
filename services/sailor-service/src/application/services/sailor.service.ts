@@ -3,13 +3,11 @@ import { randomUUID } from 'crypto';
 import { Sailor } from '../../domain/entities/sailor.entity';
 import { SailorRepository } from '../../domain/repositories/sailor.repository';
 import { Name } from '../../domain/value-objects/name.vo';
+import { REPOSITORIES } from '../../infrastructure/constants/providers.constants';
 
 @Injectable()
 export class SailorService {
-  constructor(
-    @Inject('SailorRepository')
-    private readonly repository: SailorRepository
-  ) {}
+  constructor(@Inject(REPOSITORIES.Sailor) private readonly repository: SailorRepository) {}
 
   async registerSailor(firstName: string, lastName: string, rank: string): Promise<Sailor> {
     const sailor = new Sailor(randomUUID(), new Name(firstName, lastName), rank);
