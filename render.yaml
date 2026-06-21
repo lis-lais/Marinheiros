@@ -2,7 +2,7 @@ services:
   - type: web
     name: api-gateway
     env: docker
-    dockerfilePath: services/api-gateway/Dockerfile
+    dockerfilePath: apps/api-gateway/Dockerfile
     plan: free
     branch: main
     region: oregon
@@ -15,7 +15,7 @@ services:
   - type: web
     name: sailor-service
     env: docker
-    dockerfilePath: services/sailor-service/Dockerfile
+    dockerfilePath: apps/sailor-service/Dockerfile
     plan: free
     branch: main
     region: oregon
@@ -28,7 +28,7 @@ services:
   - type: web
     name: schedule-service
     env: docker
-    dockerfilePath: services/schedule-service/Dockerfile
+    dockerfilePath: apps/schedule-service/Dockerfile
     plan: free
     branch: main
     region: oregon
