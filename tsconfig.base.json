@@ -12,10 +12,11 @@
     "incremental": true,
     "skipLibCheck": true,
     "strict": true,
+    "esModuleInterop": true,
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
-      "@shared/*": ["services/shared/*"]
+      "@marinheiros/core": ["packages/core/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

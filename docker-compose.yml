@@ -1,12 +1,16 @@
-version: '3.8'
 services:
   mongo:
     image: mongo:6.0
     container_name: marinheiros-mongo
     ports:
       - '27017:27017'
-    environment:
-      MONGO_INITDB_DATABASE: marinheiros
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand({ping:1})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -14,67 +18,59 @@ services:
     ports:
       - '5672:5672'
       - '15672:15672'
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   sailor-service:
-    build: ./services/sailor-service
+    build:
+      context: .
+      dockerfile: apps/sailor-service/Dockerfile
     container_name: sailor-service
+    ports:
+      - '3001:3001'
     environment:
       - MONGODB_URI=mongodb://mongo:27017/marinheiros
       - RABBITMQ_URL=amqp://rabbitmq:5672
     depends_on:
-      - mongo
-      - rabbitmq
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   schedule-service:
-    build: ./services/schedule-service
+    build:
+      context: .
+      dockerfile: apps/schedule-service/Dockerfile
     container_name: schedule-service
+    ports:
+      - '3002:3002'
     environment:
       - MONGODB_URI=mongodb://mongo:27017/marinheiros
       - RABBITMQ_URL=amqp://rabbitmq:5672
     depends_on:
-      - mongo
-      - rabbitmq
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   api-gateway:
-    build: ./services/api-gateway
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
     container_name: api-gateway
+    ports:
+      - '3000:3000'
     environment:
       - SAILOR_SERVICE_URL=http://sailor-service:3001/sailors
       - SCHEDULE_SERVICE_URL=http://schedule-service:3002/schedules
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-    ports:
-      - '3000:3000'
     depends_on:
-      - sailor-service
-      - schedule-service
-      - rabbitmq
-version: '3.9'
-services:
-  sailor-service:
-    build:
-      context: ./services/sailor-service
-      dockerfile: Dockerfile
-    ports:
-      - '3001:3001'
-  schedule-service:
-    build:
-      context: ./services/schedule-service
-      dockerfile: Dockerfile
-    ports:
-      - '3002:3002'
-  api-gateway:
-    build:
-      context: ./services/api-gateway
-      dockerfile: Dockerfile
-    ports:
-      - '3000:3000'
-  mongo:
-    image: mongo:6.0
-    restart: unless-stopped
-    ports:
-      - '27017:27017'
-    volumes:
-      - mongo_data:/data/db
+      sailor-service:
+        condition: service_started
+      schedule-service:
+        condition: service_started
 
 volumes:
   mongo_data:
