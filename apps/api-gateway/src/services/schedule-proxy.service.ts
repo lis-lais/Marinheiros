@@ -34,6 +34,53 @@ export class ScheduleProxyService {
     }
   }
 
+  async updateProfile(payload: Record<string, unknown>) {
+    try {
+      const response = await this.client.post('/profile', payload);
+      return response.data;
+    } catch (err: unknown) {
+      this.handleError(err, 'Schedule service profile error');
+    }
+  }
+
+  async getProjections(sailorId: string, year?: string, month?: string) {
+    try {
+      const response = await this.client.get(`/projections/${sailorId}`, {
+        params: { year, month }
+      });
+      return response.data;
+    } catch (err: unknown) {
+      this.handleError(err, 'Schedule service projections error');
+    }
+  }
+
+  async getNotifications(sailorId: string) {
+    try {
+      const response = await this.client.get(`/notifications/${sailorId}`);
+      return response.data;
+    } catch (err: unknown) {
+      this.handleError(err, 'Schedule service notifications error');
+    }
+  }
+
+  async confirmTransition(payload: Record<string, unknown>) {
+    try {
+      const response = await this.client.post('/confirm', payload);
+      return response.data;
+    } catch (err: unknown) {
+      this.handleError(err, 'Schedule service confirm error');
+    }
+  }
+
+  async triggerCron() {
+    try {
+      const response = await this.client.post('/trigger-cron');
+      return response.data;
+    } catch (err: unknown) {
+      this.handleError(err, 'Schedule service cron trigger error');
+    }
+  }
+
   async getScheduleBySailor(sailorId: string) {
     try {
       const response = await this.client.get(`/sailor/${sailorId}`);

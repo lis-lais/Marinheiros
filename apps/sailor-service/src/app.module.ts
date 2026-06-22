@@ -12,6 +12,8 @@ import { ListSailorsUseCase } from './application/use-cases/list-sailors.use-cas
 import { SailorRepository } from './domain/repositories/sailor.repository';
 import { IEventPublisher } from './domain/ports/event-publisher.interface';
 
+import { AuthenticateSailorUseCase } from './application/use-cases/authenticate-sailor.use-case';
+
 @Module({
   imports: [
     MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/marinheiros'),
@@ -41,6 +43,11 @@ import { IEventPublisher } from './domain/ports/event-publisher.interface';
     {
       provide: USE_CASES.ListSailors,
       useFactory: (repo: SailorRepository) => new ListSailorsUseCase(repo),
+      inject: [REPOSITORIES.Sailor]
+    },
+    {
+      provide: USE_CASES.AuthenticateSailor,
+      useFactory: (repo: SailorRepository) => new AuthenticateSailorUseCase(repo),
       inject: [REPOSITORIES.Sailor]
     },
     // keep in-memory for tests or fallback

@@ -5,7 +5,7 @@ import { Name } from '@marinheiros/core';
 describe('InMemorySailorRepository', () => {
   it('should store and retrieve sailors', async () => {
     const repository = new InMemorySailorRepository();
-    const sailor = new Sailor('s1', new Name('Maria', 'Oliveira'), 'Cabo');
+    const sailor = new Sailor('s1', new Name('Maria', 'Oliveira'), 'Cabo', 'maria@ocean.com', 'hashed123');
 
     await repository.create(sailor);
     const found = await repository.findById('s1');

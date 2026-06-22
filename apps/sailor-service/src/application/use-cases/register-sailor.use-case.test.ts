@@ -24,24 +24,26 @@ describe('RegisterSailorUseCase', () => {
   });
 
   it('should register a sailor successfully and publish event', async () => {
-    const sailor = await useCase.execute('João', 'Silva', 'Cabo');
+    const sailor = await useCase.execute('João', 'Silva', 'Cabo', 'marinheiro@ocean.com', 'Senha123');
 
     expect(sailor).toBeInstanceOf(Sailor);
     expect(sailor.name).toBeInstanceOf(Name);
     expect(sailor.name.fullName).toBe('João Silva');
     expect(sailor.rank).toBe('Cabo');
+    expect(sailor.email).toBe('marinheiro@ocean.com');
     expect(repository.create).toHaveBeenCalledWith(sailor);
     expect(publisher.publish).toHaveBeenCalledWith('sailor.created', {
       id: sailor.id,
       fullName: 'João Silva',
       rank: 'Cabo',
+      email: 'marinheiro@ocean.com'
     });
   });
 
   it('should register a sailor even if publisher fails (resilience)', async () => {
     publisher.publish.mockRejectedValue(new Error('RabbitMQ down'));
 
-    const sailor = await useCase.execute('João', 'Silva', 'Cabo');
+    const sailor = await useCase.execute('João', 'Silva', 'Cabo', 'marinheiro@ocean.com', 'Senha123');
 
     expect(sailor.name.fullName).toBe('João Silva');
     expect(repository.create).toHaveBeenCalledWith(sailor);

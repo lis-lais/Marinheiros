@@ -34,6 +34,15 @@ export class SailorProxyService {
     }
   }
 
+  async authenticateSailor(payload: Record<string, string>) {
+    try {
+      const response = await this.client.post('/authenticate', payload);
+      return response.data;
+    } catch (err: unknown) {
+      this.handleError(err, 'Sailor authentication error');
+    }
+  }
+
   async getSailor(id: string) {
     try {
       const response = await this.client.get(`/${id}`);

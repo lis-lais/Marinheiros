@@ -5,6 +5,8 @@ export class Sailor {
     public readonly id: string,
     public readonly name: Name,
     public readonly rank: string,
+    public readonly email: string,
+    public readonly passwordHash: string,
     public readonly createdAt: Date = new Date()
   ) {}
 }

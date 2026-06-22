@@ -9,5 +9,6 @@ export const MESSAGING = {
 export const USE_CASES = {
   RegisterSailor: Symbol('RegisterSailorUseCase'),
   GetSailorById: Symbol('GetSailorByIdUseCase'),
-  ListSailors: Symbol('ListSailorsUseCase')
+  ListSailors: Symbol('ListSailorsUseCase'),
+  AuthenticateSailor: Symbol('AuthenticateSailorUseCase')
 } as const;

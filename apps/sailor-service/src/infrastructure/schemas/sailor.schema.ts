@@ -3,6 +3,8 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class SailorDocument extends Document {
+  @Prop({ type: String })
+  override _id!: string;
 
   @Prop({ required: true })
   firstName!: string;
@@ -12,6 +14,12 @@ export class SailorDocument extends Document {
 
   @Prop({ required: true })
   rank!: string;
+
+  @Prop({ required: true, unique: true })
+  email!: string;
+
+  @Prop({ required: true })
+  passwordHash!: string;
 
   @Prop({ default: Date.now })
   createdAt!: Date;

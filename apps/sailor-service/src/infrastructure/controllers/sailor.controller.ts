@@ -4,6 +4,7 @@ import { SailorResponseDto } from '../../application/dto/sailor-response.dto';
 import { RegisterSailorUseCase } from '../../application/use-cases/register-sailor.use-case';
 import { GetSailorByIdUseCase } from '../../application/use-cases/get-sailor-by-id.use-case';
 import { ListSailorsUseCase } from '../../application/use-cases/list-sailors.use-case';
+import { AuthenticateSailorUseCase } from '../../application/use-cases/authenticate-sailor.use-case';
 import { presentSailor } from '../presenters/sailor.presenter';
 import { USE_CASES } from '../constants/providers.constants';
 import { DomainExceptionFilter } from '../http/domain-exception.filter';
@@ -14,12 +15,25 @@ export class SailorController {
   constructor(
     @Inject(USE_CASES.RegisterSailor) private readonly registerSailorUseCase: RegisterSailorUseCase,
     @Inject(USE_CASES.GetSailorById) private readonly getSailorByIdUseCase: GetSailorByIdUseCase,
-    @Inject(USE_CASES.ListSailors) private readonly listSailorsUseCase: ListSailorsUseCase
+    @Inject(USE_CASES.ListSailors) private readonly listSailorsUseCase: ListSailorsUseCase,
+    @Inject(USE_CASES.AuthenticateSailor) private readonly authenticateSailorUseCase: AuthenticateSailorUseCase
   ) {}
 
   @Post()
   async create(@Body() body: CreateSailorDto): Promise<SailorResponseDto> {
-    const sailor = await this.registerSailorUseCase.execute(body.firstName, body.lastName, body.rank);
+    const sailor = await this.registerSailorUseCase.execute(
+      body.firstName,
+      body.lastName,
+      body.rank,
+      body.email,
+      body.password
+    );
+    return presentSailor(sailor);
+  }
+
+  @Post('authenticate')
+  async authenticate(@Body() body: Record<string, string>): Promise<SailorResponseDto> {
+    const sailor = await this.authenticateSailorUseCase.execute(body.email, body.password);
     return presentSailor(sailor);
   }
 

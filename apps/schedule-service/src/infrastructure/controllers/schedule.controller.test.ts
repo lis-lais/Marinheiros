@@ -1,3 +1,4 @@
+// apps/schedule-service/src/infrastructure/controllers/schedule.controller.test.ts
 import { ScheduleController } from './schedule.controller';
 import { Embarkation } from '../../domain/entities/embarkation.entity';
 import { DateRange } from '../../domain/value-objects/date-range.vo';
@@ -11,21 +12,55 @@ const makeGetEmbarkationsForSailorUseCase = () => ({
 const makeListAllEmbarkationsUseCase = () => ({
   execute: jest.fn()
 });
+const makeUpdateScheduleProfileUseCase = () => ({
+  execute: jest.fn()
+});
+const makeGetCalendarProjectionsUseCase = () => ({
+  execute: jest.fn()
+});
+const makeConfirmTransitionUseCase = () => ({
+  execute: jest.fn()
+});
+const makePendingConfirmationRepository = () => ({
+  save: jest.fn(),
+  findById: jest.fn(),
+  findPendingBySailorId: jest.fn(),
+  findAll: jest.fn()
+});
+const makeTransitionCheckerCron = () => ({
+  checkTransitions: jest.fn()
+});
 
 describe('ScheduleController', () => {
   let scheduleUseCase: ReturnType<typeof makeScheduleEmbarkationUseCase>;
   let getBySailorUseCase: ReturnType<typeof makeGetEmbarkationsForSailorUseCase>;
   let listUseCase: ReturnType<typeof makeListAllEmbarkationsUseCase>;
+  let updateProfileUseCase: ReturnType<typeof makeUpdateScheduleProfileUseCase>;
+  let getProjectionsUseCase: ReturnType<typeof makeGetCalendarProjectionsUseCase>;
+  let confirmTransitionUseCase: ReturnType<typeof makeConfirmTransitionUseCase>;
+  let pendingRepo: ReturnType<typeof makePendingConfirmationRepository>;
+  let checkerCron: ReturnType<typeof makeTransitionCheckerCron>;
   let controller: ScheduleController;
 
   beforeEach(() => {
     scheduleUseCase = makeScheduleEmbarkationUseCase();
     getBySailorUseCase = makeGetEmbarkationsForSailorUseCase();
     listUseCase = makeListAllEmbarkationsUseCase();
+    updateProfileUseCase = makeUpdateScheduleProfileUseCase();
+    getProjectionsUseCase = makeGetCalendarProjectionsUseCase();
+    confirmTransitionUseCase = makeConfirmTransitionUseCase();
+    pendingRepo = makePendingConfirmationRepository();
+    checkerCron = makeTransitionCheckerCron();
+
     controller = new ScheduleController(
       scheduleUseCase as any,
       getBySailorUseCase as any,
-      listUseCase as any
+      listUseCase as any,
+      updateProfileUseCase as any,
+      getProjectionsUseCase as any,
+      confirmTransitionUseCase as any,
+      pendingRepo as any,
+      checkerCron as any
     );
   });
 

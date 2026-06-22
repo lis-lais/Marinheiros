@@ -12,4 +12,12 @@ export class CreateSailorDto {
   @IsNotEmpty()
   @IsString()
   rank!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  email!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  password!: string;
 }

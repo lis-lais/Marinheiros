@@ -3,6 +3,8 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class EmbarkationDocument extends Document {
+  @Prop({ type: String })
+  override _id!: string;
   
   @Prop({ required: true })
   sailorId!: string;

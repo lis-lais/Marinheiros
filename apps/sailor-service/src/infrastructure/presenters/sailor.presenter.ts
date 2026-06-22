@@ -6,6 +6,7 @@ export function presentSailor(sailor: Sailor): SailorResponseDto {
     id: sailor.id,
     fullName: sailor.name.fullName,
     rank: sailor.rank,
+    email: sailor.email,
     createdAt: sailor.createdAt
   };
 }
