@@ -9,8 +9,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
-  await app.listen(3002);
-  logger.info('Schedule Service running on http://localhost:3002');
+  await app.listen(6002);
+  logger.info('Schedule Service running on http://localhost:6002');
 }
 
 bootstrap();

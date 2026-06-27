@@ -47,7 +47,7 @@ jobs:
       - name: Wait for gateway health
         run: |
           for i in {1..30}; do
-            if curl -sSf http://localhost:3000/health; then
+            if curl -sSf http://localhost:6000/health; then
               echo "Gateway healthy"
               exit 0
             fi

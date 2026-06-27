@@ -30,13 +30,12 @@ services:
       dockerfile: apps/sailor-service/Dockerfile
     container_name: sailor-service
     ports:
-      - '3001:3001'
+      - '6001:6001'
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/marinheiros
+      - MONGODB_URI=${MONGODB_URI}
       - RABBITMQ_URL=amqp://rabbitmq:5672
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
     depends_on:
-      mongo:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
@@ -46,13 +45,12 @@ services:
       dockerfile: apps/schedule-service/Dockerfile
     container_name: schedule-service
     ports:
-      - '3002:3002'
+      - '6002:6002'
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/marinheiros
+      - MONGODB_URI=${MONGODB_URI}
       - RABBITMQ_URL=amqp://rabbitmq:5672
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
     depends_on:
-      mongo:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
@@ -62,10 +60,11 @@ services:
       dockerfile: apps/api-gateway/Dockerfile
     container_name: api-gateway
     ports:
-      - '3000:3000'
+      - '6000:6000'
     environment:
-      - SAILOR_SERVICE_URL=http://sailor-service:3001/sailors
-      - SCHEDULE_SERVICE_URL=http://schedule-service:3002/schedules
+      - SAILOR_SERVICE_URL=http://sailor-service:6001/sailors
+      - SCHEDULE_SERVICE_URL=http://schedule-service:6002/schedules
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT}
     depends_on:
       sailor-service:
         condition: service_started

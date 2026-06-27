@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 // API Configuration
-const API_BASE = 'http://localhost:3000';
+const API_BASE = '/marinheiros/api';
 
 interface SailorInfo {
   id: string;

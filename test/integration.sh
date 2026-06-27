@@ -6,7 +6,7 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
-BASE=http://localhost:3000
+BASE=http://localhost:6000
 
 echo "Creating sailor..."
 SAILOR_JSON=$(curl -s -X POST "$BASE/sailors" -H "Content-Type: application/json" -d '{"firstName":"Auto","lastName":"Test","rank":"Marinheiro"}')

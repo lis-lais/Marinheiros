@@ -9,8 +9,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
-  await app.listen(3001);
-  logger.info('Sailor Service running on http://localhost:3001');
+  await app.listen(6001);
+  logger.info('Sailor Service running on http://localhost:6001');
 }
 
 bootstrap();
