@@ -1,0 +1,31 @@
+---
+description: Governança de roteamento entre agentes do monorepo Marinheiros (esteira PO → Coordinator → técnicos)
+alwaysApply: true
+---
+
+# Monorepo Agent Workflow Routing Rules
+
+Espelho de `.github/agents/workflow-routing.md` — mantenha ambos alinhados ao editar.
+
+## Esteira (ordem obrigatória)
+
+1. **Fase 1 — Produto:** `@agent-po` ↔ humano → handoff para `@agent-coordinator`
+2. **Fase 2 — Arquitetura:** `@agent-architect`
+3. **Fase 3 — QA/TDD (RED):** `@agent-qa`
+4. **Fase 4 — Dev:** `@agent-dev-backend` ou `@agent-dev-frontend`
+5. **Fase 5 — Clean Code:** `@agent-clean-code`
+6. **Fase 6 — Observabilidade:** `@observability-lgtm`
+7. **Fase 7 — Finalização:** `@agent-coordinator` notifica o humano
+
+## Regras de comunicação
+
+- **Hub central:** apenas `@agent-coordinator` orquestra agentes técnicos.
+- **Retorno:** agentes técnicos respondem ao `@agent-coordinator`, não ao humano nem entre si.
+- **CI/CD direto:** `@agent-cicd` pode ser invocado pelo humano para infra (Actions, Docker, deploy) sem a esteira completa.
+- **CI/CD na esteira:** quando a tarefa altera `.github/workflows/`, `Dockerfile`, `docker-compose.yml` ou `render.yaml`, o coordinator pode chamar `@agent-cicd` após Fase 6.
+
+## Subagents Cursor
+
+Definições em `.cursor/agents/*.md` (espelho de `.github/agents/*.agent.md`).
+
+Invoque com `/agent-po`, `/agent-coordinator`, etc., ou peça explicitamente: *"Use o subagent agent-architect"*.
