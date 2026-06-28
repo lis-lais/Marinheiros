@@ -38,13 +38,22 @@ jobs:
       - name: Run unit tests
         run: npm test
 
+      - name: Build services for integration
+        run: |
+          npm run build --workspace=@marinheiros/core
+          npm run build --workspace=@marinheiros/sailor-service
+          npm run build --workspace=@marinheiros/schedule-service
+          npm run build --workspace=@marinheiros/api-gateway
+
       - name: Start services (background)
         run: |
           mkdir -p ci-logs
           export MONGODB_URI="mongodb://localhost:27017/marinheiros"
-          nohup bash -lc "MONGODB_URI=\"$MONGODB_URI\" npm --workspace @marinheiros/sailor-service run start:dev" > ci-logs/sailor.log 2>&1 &
-          nohup bash -lc "MONGODB_URI=\"$MONGODB_URI\" npm --workspace @marinheiros/schedule-service run start:dev" > ci-logs/schedule.log 2>&1 &
-          nohup bash -lc "MONGODB_URI=\"$MONGODB_URI\" npm --workspace @marinheiros/api-gateway run start:dev" > ci-logs/gateway.log 2>&1 &
+          export SAILOR_SERVICE_URL="http://localhost:6001/sailors"
+          export SCHEDULE_SERVICE_URL="http://localhost:6002/schedules"
+          nohup bash -lc "MONGODB_URI=\"$MONGODB_URI\" npm --workspace @marinheiros/sailor-service run start" > ci-logs/sailor.log 2>&1 &
+          nohup bash -lc "MONGODB_URI=\"$MONGODB_URI\" npm --workspace @marinheiros/schedule-service run start" > ci-logs/schedule.log 2>&1 &
+          nohup bash -lc "SAILOR_SERVICE_URL=\"$SAILOR_SERVICE_URL\" SCHEDULE_SERVICE_URL=\"$SCHEDULE_SERVICE_URL\" npm --workspace @marinheiros/api-gateway run start" > ci-logs/gateway.log 2>&1 &
           sleep 6
 
       - name: Wait for gateway health

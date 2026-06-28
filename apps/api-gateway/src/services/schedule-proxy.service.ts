@@ -11,7 +11,7 @@ interface AxiosErrorLike {
 
 @Injectable()
 export class ScheduleProxyService {
-  private readonly baseUrl = process.env.SCHEDULE_SERVICE_URL || 'http://localhost:3002/schedules';
+  private readonly baseUrl = process.env.SCHEDULE_SERVICE_URL || 'http://localhost:6002/schedules';
   private readonly client: AxiosInstance;
 
   constructor() {

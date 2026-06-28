@@ -9,7 +9,7 @@ fi
 BASE=http://localhost:6000
 
 echo "Creating sailor..."
-SAILOR_JSON=$(curl -s -X POST "$BASE/sailors" -H "Content-Type: application/json" -d '{"firstName":"Auto","lastName":"Test","rank":"Marinheiro"}')
+SAILOR_JSON=$(curl -s -X POST "$BASE/sailors" -H "Content-Type: application/json" -d '{"firstName":"Auto","lastName":"Test","rank":"Marinheiro","email":"auto.test@marinheiros.local","password":"ci-test-password"}')
 echo "$SAILOR_JSON" | jq .
 SAILOR_ID=$(echo "$SAILOR_JSON" | jq -r .id)
 

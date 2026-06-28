@@ -11,7 +11,7 @@ interface AxiosErrorLike {
 
 @Injectable()
 export class SailorProxyService {
-  private readonly baseUrl = process.env.SAILOR_SERVICE_URL || 'http://localhost:3001/sailors';
+  private readonly baseUrl = process.env.SAILOR_SERVICE_URL || 'http://localhost:6001/sailors';
   private readonly client: AxiosInstance;
 
   constructor() {
