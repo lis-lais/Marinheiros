@@ -34,6 +34,15 @@ export class SailorProxyService {
     }
   }
 
+  async resetForgottenPassword(payload: Record<string, string>) {
+    try {
+      const response = await this.client.post('/password-resets', payload);
+      return response.data;
+    } catch (err: unknown) {
+      this.handleError(err, 'Sailor password reset error');
+    }
+  }
+
   async authenticateSailor(payload: Record<string, string>) {
     try {
       const response = await this.client.post('/authenticate', payload);

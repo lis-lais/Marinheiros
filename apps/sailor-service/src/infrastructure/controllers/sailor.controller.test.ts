@@ -32,7 +32,8 @@ describe('SailorController', () => {
       registerUseCase as any,
       getByIdUseCase as any,
       listUseCase as any,
-      authenticateUseCase as any
+      authenticateUseCase as any,
+      { execute: jest.fn() } as any
     );
   });
 

@@ -5,6 +5,8 @@ import { RegisterSailorUseCase } from '../../application/use-cases/register-sail
 import { GetSailorByIdUseCase } from '../../application/use-cases/get-sailor-by-id.use-case';
 import { ListSailorsUseCase } from '../../application/use-cases/list-sailors.use-case';
 import { AuthenticateSailorUseCase } from '../../application/use-cases/authenticate-sailor.use-case';
+import { ResetForgottenPasswordUseCase } from '../../application/use-cases/reset-forgotten-password.use-case';
+import { ResetForgottenPasswordDto } from '../../application/dto/reset-forgotten-password.dto';
 import { presentSailor } from '../presenters/sailor.presenter';
 import { USE_CASES } from '../constants/providers.constants';
 import { DomainExceptionFilter } from '../http/domain-exception.filter';
@@ -16,7 +18,8 @@ export class SailorController {
     @Inject(USE_CASES.RegisterSailor) private readonly registerSailorUseCase: RegisterSailorUseCase,
     @Inject(USE_CASES.GetSailorById) private readonly getSailorByIdUseCase: GetSailorByIdUseCase,
     @Inject(USE_CASES.ListSailors) private readonly listSailorsUseCase: ListSailorsUseCase,
-    @Inject(USE_CASES.AuthenticateSailor) private readonly authenticateSailorUseCase: AuthenticateSailorUseCase
+    @Inject(USE_CASES.AuthenticateSailor) private readonly authenticateSailorUseCase: AuthenticateSailorUseCase,
+    @Inject(USE_CASES.ResetForgottenPassword) private readonly resetForgottenPasswordUseCase: ResetForgottenPasswordUseCase,
   ) {}
 
   @Post()
@@ -29,6 +32,11 @@ export class SailorController {
       body.password
     );
     return presentSailor(sailor);
+  }
+
+  @Post('password-resets')
+  async resetForgottenPassword(@Body() body: ResetForgottenPasswordDto) {
+    return this.resetForgottenPasswordUseCase.execute(body);
   }
 
   @Post('authenticate')

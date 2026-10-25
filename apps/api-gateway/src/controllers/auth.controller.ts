@@ -14,6 +14,11 @@ export class AuthController {
     return this.sailorProxy.createSailor(body);
   }
 
+  @Post('password-resets')
+  async resetForgottenPassword(@Body() body: Record<string, string>) {
+    return this.sailorProxy.resetForgottenPassword(body);
+  }
+
   @Post('login')
   async login(@Body() body: Record<string, string>) {
     const sailor = await this.sailorProxy.authenticateSailor(body);

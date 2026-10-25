@@ -13,6 +13,10 @@ import { SailorRepository } from './domain/repositories/sailor.repository';
 import { IEventPublisher } from './domain/ports/event-publisher.interface';
 
 import { AuthenticateSailorUseCase } from './application/use-cases/authenticate-sailor.use-case';
+import { ResetForgottenPasswordUseCase } from './application/use-cases/reset-forgotten-password.use-case';
+import { ResetForgottenPasswordService } from './domain/services/reset-forgotten-password.service';
+import { IPasswordHasher, I_PASSWORD_HASHER } from './domain/ports/password-hasher.port';
+import { BcryptPasswordHasher } from './infrastructure/adapters/bcrypt-password.hasher';
 
 @Module({
   imports: [
@@ -49,6 +53,16 @@ import { AuthenticateSailorUseCase } from './application/use-cases/authenticate-
       provide: USE_CASES.AuthenticateSailor,
       useFactory: (repo: SailorRepository) => new AuthenticateSailorUseCase(repo),
       inject: [REPOSITORIES.Sailor]
+    },
+    {
+      provide: I_PASSWORD_HASHER,
+      useClass: BcryptPasswordHasher,
+    },
+    {
+      provide: USE_CASES.ResetForgottenPassword,
+      useFactory: (sailors: SailorRepository, passwords: IPasswordHasher) =>
+        new ResetForgottenPasswordUseCase(new ResetForgottenPasswordService(sailors, passwords)),
+      inject: [REPOSITORIES.Sailor, I_PASSWORD_HASHER],
     },
     // keep in-memory for tests or fallback
     InMemorySailorRepository
