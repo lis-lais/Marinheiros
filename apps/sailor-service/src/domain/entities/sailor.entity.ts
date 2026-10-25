@@ -9,4 +9,8 @@ export class Sailor {
     public readonly passwordHash: string,
     public readonly createdAt: Date = new Date()
   ) {}
+
+  withPasswordHash(passwordHash: string): Sailor {
+    return new Sailor(this.id, this.name, this.rank, this.email, passwordHash, this.createdAt);
+  }
 }

@@ -34,6 +34,20 @@ export class MongooseSailorRepository implements SailorRepository {
     return new Sailor(doc._id.toString(), new Name(doc.firstName, doc.lastName), doc.rank, doc.email, doc.passwordHash, doc.createdAt);
   }
 
+  async findByNormalizedEmail(normalizedEmail: string): Promise<Sailor | null> {
+    const doc = await this.model.findOne({
+      $expr: {
+        $eq: [{ $toLower: { $trim: { input: '$email' } } }, normalizedEmail],
+      },
+    }).exec();
+    if (!doc) return null;
+    return new Sailor(doc._id.toString(), new Name(doc.firstName, doc.lastName), doc.rank, doc.email, doc.passwordHash, doc.createdAt);
+  }
+
+  async update(sailor: Sailor): Promise<void> {
+    await this.model.updateOne({ _id: sailor.id }, { $set: { passwordHash: sailor.passwordHash } }).exec();
+  }
+
   async findAll(): Promise<Sailor[]> {
     const docs = await this.model.find().exec();
     return docs.map((d) => new Sailor(d._id.toString(), new Name(d.firstName, d.lastName), d.rank, d.email, d.passwordHash, d.createdAt));

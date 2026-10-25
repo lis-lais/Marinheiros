@@ -16,6 +16,53 @@ import {
 
 // API Configuration
 const API_BASE = '/marinheiros/api';
+const PASSWORD_RESET_MESSAGE = 'Senha alterada. Entre com a senha nova.';
+
+function messageFromApi(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw) as { message?: unknown };
+    if (typeof parsed.message === 'string') {
+      return parsed.message;
+    }
+  } catch {
+    return raw;
+  }
+  return raw;
+}
+
+function formatIsoToDisplay(iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso.trim());
+  if (!match) {
+    return iso;
+  }
+  return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
+function maskCivilDate(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 2) {
+    return digits;
+  }
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+function parseDisplayToIso(display: string): string | null {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(display.trim());
+  if (!match) {
+    return null;
+  }
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+    return null;
+  }
+  return `${match[3]}-${match[2]}-${match[1]}`;
+}
 
 interface SailorInfo {
   id: string;
@@ -46,12 +93,15 @@ export default function App() {
 
   // Login/Register form states
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [isForgotMode, setIsForgotMode] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
   const [firstNameInput, setFirstNameInput] = useState('');
   const [lastNameInput, setLastNameInput] = useState('');
   const [rankInput, setRankInput] = useState('Praticante');
   const [authError, setAuthError] = useState('');
+  const [authNotice, setAuthNotice] = useState('');
 
   // Dashboard states
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -145,6 +195,34 @@ export default function App() {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthNotice('');
+    setIsLoading(true);
+    try {
+      await apiFetch('/auth/password-resets', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: emailInput,
+          firstName: firstNameInput,
+          lastName: lastNameInput,
+          newPassword: passwordInput,
+          confirmPassword: confirmPasswordInput,
+        }),
+      });
+      setPasswordInput('');
+      setConfirmPasswordInput('');
+      setIsForgotMode(false);
+      setAuthNotice(PASSWORD_RESET_MESSAGE);
+    } catch (err: unknown) {
+      const error = err as Error;
+      setAuthError(messageFromApi(error.message) || 'Erro ao alterar a senha.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('sailor_token');
     localStorage.removeItem('sailor_info');
@@ -189,11 +267,16 @@ export default function App() {
     setProfileSuccessMsg('');
     setProfileErrorMsg('');
     try {
+      const lastEventDate = parseDisplayToIso(lastEventDateInput);
+      if (!lastEventDate) {
+        setProfileErrorMsg('Informe a data no formato DD/MM/AAAA.');
+        return;
+      }
       await apiFetch('/schedules/profile', {
         method: 'POST',
         body: JSON.stringify({
           scale: scaleInput,
-          lastEventDate: lastEventDateInput,
+          lastEventDate,
           lastEventType: lastEventTypeInput,
           vesselName: vesselNameInput
         })
@@ -208,8 +291,9 @@ export default function App() {
 
   // Confirm pending transition
   const handleConfirmTransition = async (pendingId: string) => {
-    if (!confirmActualDate) {
-      alert('Por favor, informe a data real do evento.');
+    const actualDate = parseDisplayToIso(confirmActualDate);
+    if (!actualDate) {
+      alert('Informe a data real no formato DD/MM/AAAA.');
       return;
     }
     try {
@@ -217,7 +301,7 @@ export default function App() {
         method: 'POST',
         body: JSON.stringify({
           pendingConfirmationId: pendingId,
-          actualDate: confirmActualDate
+          actualDate
         })
       });
       setConfirmActualDate('');
@@ -343,7 +427,7 @@ export default function App() {
 
           <div style={{ display: 'flex', marginBottom: '24px', borderBottom: '1px solid var(--border-card)' }}>
             <button 
-              onClick={() => { setIsRegisterMode(false); setAuthError(''); }}
+              onClick={() => { setIsRegisterMode(false); setIsForgotMode(false); setAuthError(''); }}
               style={{ 
                 flex: 1, padding: '12px', background: 'none', border: 'none', 
                 color: !isRegisterMode ? 'var(--btn-primary)' : 'var(--text-secondary)',
@@ -355,7 +439,7 @@ export default function App() {
               Entrar
             </button>
             <button 
-              onClick={() => { setIsRegisterMode(true); setAuthError(''); }}
+              onClick={() => { setIsRegisterMode(true); setIsForgotMode(false); setAuthError(''); }}
               style={{ 
                 flex: 1, padding: '12px', background: 'none', border: 'none', 
                 color: isRegisterMode ? 'var(--btn-primary)' : 'var(--text-secondary)',
@@ -373,8 +457,44 @@ export default function App() {
               {authError}
             </div>
           )}
+          {authNotice && (
+            <div style={{ padding: '12px', borderRadius: 'var(--radius-sm)', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#6ee7b7', marginBottom: '20px', fontSize: '0.875rem' }}>
+              {authNotice}
+            </div>
+          )}
 
-          {isRegisterMode ? (
+          {isForgotMode ? (
+            <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label htmlFor="forgot-email" style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>E-mail</label>
+                <input id="forgot-email" required className="input-field" type="email" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <label htmlFor="forgot-first-name" style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Nome</label>
+                  <input id="forgot-first-name" required className="input-field" type="text" value={firstNameInput} onChange={(e) => setFirstNameInput(e.target.value)} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label htmlFor="forgot-last-name" style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Sobrenome</label>
+                  <input id="forgot-last-name" required className="input-field" type="text" value={lastNameInput} onChange={(e) => setLastNameInput(e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="forgot-new-password" style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Senha nova</label>
+                <input id="forgot-new-password" required className="input-field" type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} />
+              </div>
+              <div>
+                <label htmlFor="forgot-confirm-password" style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Repetir senha</label>
+                <input id="forgot-confirm-password" required className="input-field" type="password" value={confirmPasswordInput} onChange={(e) => setConfirmPasswordInput(e.target.value)} />
+              </div>
+              <button disabled={isLoading} type="submit" className="btn btn-primary">
+                {isLoading ? 'Salvando...' : 'Definir senha nova'}
+              </button>
+              <button type="button" onClick={() => { setIsForgotMode(false); setAuthError(''); }} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', minHeight: '44px', padding: '14px 0' }}>
+                Voltar para entrar
+              </button>
+            </form>
+          ) : isRegisterMode ? (
             <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div>
@@ -434,6 +554,9 @@ export default function App() {
               <button disabled={isLoading} type="submit" className="btn btn-primary" style={{ marginTop: '8px' }}>
                 {isLoading ? 'Entrando...' : 'Entrar'}
               </button>
+              <button type="button" onClick={() => { setIsForgotMode(true); setAuthError(''); setAuthNotice(''); }} style={{ background: 'none', border: 'none', color: 'var(--btn-primary)', cursor: 'pointer', textAlign: 'left', minHeight: '44px', padding: '14px 0' }}>
+                Esqueci a senha
+              </button>
             </form>
           )}
         </div>
@@ -487,7 +610,7 @@ export default function App() {
                 </h3>
                 {notifications.map((notif) => {
                   const transitionLabel = notif.transitionType === 'embark' ? 'Embarque' : 'Desembarque';
-                  const dateFormatted = new Date(notif.scheduledDate).toLocaleDateString('pt-BR');
+                  const dateFormatted = formatIsoToDisplay(notif.scheduledDate);
                   return (
                     <div key={notif.id} style={{ marginBottom: '12px' }}>
                       <p style={{ color: 'var(--text-primary)', fontSize: '0.95rem', marginBottom: '12px' }}>
@@ -495,11 +618,14 @@ export default function App() {
                       </p>
                       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <input 
-                          type="date" 
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="DD/MM/AAAA"
+                          maxLength={10}
                           className="input-field" 
                           style={{ maxWidth: '200px' }} 
                           value={confirmActualDate}
-                          onChange={(e) => setConfirmActualDate(e.target.value)} 
+                          onChange={(e) => setConfirmActualDate(maskCivilDate(e.target.value))} 
                         />
                         <button 
                           onClick={() => handleConfirmTransition(notif.id)} 
@@ -551,8 +677,8 @@ export default function App() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Data do Último Evento (Âncora)</label>
-                  <input required className="input-field" type="date" value={lastEventDateInput} onChange={(e) => setLastEventDateInput(e.target.value)} />
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Data do Último Evento (DD/MM/AAAA)</label>
+                  <input required className="input-field" type="text" inputMode="numeric" placeholder="DD/MM/AAAA" maxLength={10} value={lastEventDateInput} onChange={(e) => setLastEventDateInput(maskCivilDate(e.target.value))} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Tipo do Último Evento</label>
@@ -613,8 +739,8 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {searchResults.map((res, index) => {
-                        const start = new Date(res.start).toLocaleDateString('pt-BR');
-                        const end = new Date(res.end).toLocaleDateString('pt-BR');
+                        const start = formatIsoToDisplay(res.start);
+                        const end = formatIsoToDisplay(res.end);
                         return (
                           <div key={index} style={{ padding: '10px', background: 'rgba(45, 106, 79, 0.15)', border: '1px solid rgba(45, 106, 79, 0.3)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
                             <strong>Folga de {res.days} dias:</strong> de {start} até {end}
@@ -687,6 +813,7 @@ export default function App() {
                       const dayNum = dateObj.getUTCDate();
                       const statusClass = day.status;
                       const isHighlighted = isDateHighlighted(day.date);
+                      const civilDate = formatIsoToDisplay(day.date);
                       
                       return (
                         <div 
@@ -695,9 +822,9 @@ export default function App() {
                           style={isHighlighted ? { border: '2px solid gold', boxShadow: '0 0 10px rgba(255, 215, 0, 0.6)', transform: 'scale(1.03)', zIndex: 1 } : {}}
                           onClick={() => {
                             if (day.status === 'off-duty') {
-                              alert(`Previsão para dia ${dayNum}/${currentMonth}: Folga!`);
+                              alert(`Previsão para ${civilDate}: Folga!`);
                             } else {
-                              alert(`Previsão para dia ${dayNum}/${currentMonth}: Embarcado de plantão!`);
+                              alert(`Previsão para ${civilDate}: Embarcado de plantão!`);
                             }
                           }}
                         >

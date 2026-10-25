@@ -18,6 +18,17 @@ export class InMemorySailorRepository implements SailorRepository {
     return this.sailors.find((sailor) => sailor.email === email) ?? null;
   }
 
+  async findByNormalizedEmail(normalizedEmail: string): Promise<Sailor | null> {
+    return this.sailors.find((sailor) => sailor.email.trim().toLowerCase() === normalizedEmail) ?? null;
+  }
+
+  async update(sailor: Sailor): Promise<void> {
+    const index = this.sailors.findIndex((stored) => stored.id === sailor.id);
+    if (index >= 0) {
+      this.sailors[index] = sailor;
+    }
+  }
+
   async findAll(): Promise<Sailor[]> {
     return [...this.sailors];
   }

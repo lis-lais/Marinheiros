@@ -18,6 +18,9 @@ export class RotationScale {
     }
     const onDuty = parseInt(match[1], 10);
     const offDuty = parseInt(match[2], 10);
+    if (onDuty > 366 || offDuty > 366) {
+      throw new DomainError('A escala deve estar no formato 14x21, com cada lado entre 1 e 366 dias.');
+    }
     return new RotationScale(onDuty, offDuty);
   }
 

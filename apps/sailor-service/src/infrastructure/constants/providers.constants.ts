@@ -10,5 +10,6 @@ export const USE_CASES = {
   RegisterSailor: Symbol('RegisterSailorUseCase'),
   GetSailorById: Symbol('GetSailorByIdUseCase'),
   ListSailors: Symbol('ListSailorsUseCase'),
-  AuthenticateSailor: Symbol('AuthenticateSailorUseCase')
+  AuthenticateSailor: Symbol('AuthenticateSailorUseCase'),
+  ResetForgottenPassword: Symbol('ResetForgottenPasswordUseCase'),
 } as const;
