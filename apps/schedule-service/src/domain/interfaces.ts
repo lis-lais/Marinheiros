@@ -38,6 +38,11 @@ export interface ConfigureRotationInput {
   vesselName?: string;
 }
 
+export interface AdjustmentPreview {
+  persisted: false;
+  board: RotationBoard;
+}
+
 export type SchedulePhase = 'embarked' | 'off-duty' | 'pending-confirmation';
 export type TransitionType = 'embark' | 'disembark';
 
