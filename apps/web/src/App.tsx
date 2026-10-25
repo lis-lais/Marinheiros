@@ -30,6 +30,40 @@ function messageFromApi(raw: string): string {
   return raw;
 }
 
+function formatIsoToDisplay(iso: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso.trim());
+  if (!match) {
+    return iso;
+  }
+  return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
+function maskCivilDate(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 2) {
+    return digits;
+  }
+  if (digits.length <= 4) {
+    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+function parseDisplayToIso(display: string): string | null {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(display.trim());
+  if (!match) {
+    return null;
+  }
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+    return null;
+  }
+  return `${match[3]}-${match[2]}-${match[1]}`;
+}
+
 interface SailorInfo {
   id: string;
   fullName: string;
@@ -233,11 +267,16 @@ export default function App() {
     setProfileSuccessMsg('');
     setProfileErrorMsg('');
     try {
+      const lastEventDate = parseDisplayToIso(lastEventDateInput);
+      if (!lastEventDate) {
+        setProfileErrorMsg('Informe a data no formato DD/MM/AAAA.');
+        return;
+      }
       await apiFetch('/schedules/profile', {
         method: 'POST',
         body: JSON.stringify({
           scale: scaleInput,
-          lastEventDate: lastEventDateInput,
+          lastEventDate,
           lastEventType: lastEventTypeInput,
           vesselName: vesselNameInput
         })
@@ -252,8 +291,9 @@ export default function App() {
 
   // Confirm pending transition
   const handleConfirmTransition = async (pendingId: string) => {
-    if (!confirmActualDate) {
-      alert('Por favor, informe a data real do evento.');
+    const actualDate = parseDisplayToIso(confirmActualDate);
+    if (!actualDate) {
+      alert('Informe a data real no formato DD/MM/AAAA.');
       return;
     }
     try {
@@ -261,7 +301,7 @@ export default function App() {
         method: 'POST',
         body: JSON.stringify({
           pendingConfirmationId: pendingId,
-          actualDate: confirmActualDate
+          actualDate
         })
       });
       setConfirmActualDate('');
@@ -570,7 +610,7 @@ export default function App() {
                 </h3>
                 {notifications.map((notif) => {
                   const transitionLabel = notif.transitionType === 'embark' ? 'Embarque' : 'Desembarque';
-                  const dateFormatted = new Date(notif.scheduledDate).toLocaleDateString('pt-BR');
+                  const dateFormatted = formatIsoToDisplay(notif.scheduledDate);
                   return (
                     <div key={notif.id} style={{ marginBottom: '12px' }}>
                       <p style={{ color: 'var(--text-primary)', fontSize: '0.95rem', marginBottom: '12px' }}>
@@ -578,11 +618,14 @@ export default function App() {
                       </p>
                       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <input 
-                          type="date" 
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="DD/MM/AAAA"
+                          maxLength={10}
                           className="input-field" 
                           style={{ maxWidth: '200px' }} 
                           value={confirmActualDate}
-                          onChange={(e) => setConfirmActualDate(e.target.value)} 
+                          onChange={(e) => setConfirmActualDate(maskCivilDate(e.target.value))} 
                         />
                         <button 
                           onClick={() => handleConfirmTransition(notif.id)} 
@@ -634,8 +677,8 @@ export default function App() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Data do Último Evento (Âncora)</label>
-                  <input required className="input-field" type="date" value={lastEventDateInput} onChange={(e) => setLastEventDateInput(e.target.value)} />
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Data do Último Evento (DD/MM/AAAA)</label>
+                  <input required className="input-field" type="text" inputMode="numeric" placeholder="DD/MM/AAAA" maxLength={10} value={lastEventDateInput} onChange={(e) => setLastEventDateInput(maskCivilDate(e.target.value))} />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Tipo do Último Evento</label>
@@ -696,8 +739,8 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       {searchResults.map((res, index) => {
-                        const start = new Date(res.start).toLocaleDateString('pt-BR');
-                        const end = new Date(res.end).toLocaleDateString('pt-BR');
+                        const start = formatIsoToDisplay(res.start);
+                        const end = formatIsoToDisplay(res.end);
                         return (
                           <div key={index} style={{ padding: '10px', background: 'rgba(45, 106, 79, 0.15)', border: '1px solid rgba(45, 106, 79, 0.3)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
                             <strong>Folga de {res.days} dias:</strong> de {start} até {end}
@@ -770,6 +813,7 @@ export default function App() {
                       const dayNum = dateObj.getUTCDate();
                       const statusClass = day.status;
                       const isHighlighted = isDateHighlighted(day.date);
+                      const civilDate = formatIsoToDisplay(day.date);
                       
                       return (
                         <div 
@@ -778,9 +822,9 @@ export default function App() {
                           style={isHighlighted ? { border: '2px solid gold', boxShadow: '0 0 10px rgba(255, 215, 0, 0.6)', transform: 'scale(1.03)', zIndex: 1 } : {}}
                           onClick={() => {
                             if (day.status === 'off-duty') {
-                              alert(`Previsão para dia ${dayNum}/${currentMonth}: Folga!`);
+                              alert(`Previsão para ${civilDate}: Folga!`);
                             } else {
-                              alert(`Previsão para dia ${dayNum}/${currentMonth}: Embarcado de plantão!`);
+                              alert(`Previsão para ${civilDate}: Embarcado de plantão!`);
                             }
                           }}
                         >
